@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "480421139178",
+    "project_id": "patrimonio-ia-samara",
+    "storage_bucket": "patrimonio-ia-samara.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480421139178:android:a2b1d219e5983564443d93",
+        "android_client_info": {
+          "package_name": "br.com.samara.patrimonio_ia"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "480421139178-q89vp40sjufk04l98m3ic0op52dlkg4e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.com.samara.patrimonio_ia",
+            "certificate_hash": "872280cff8b05188f83eac3693b12d7875544923"
+          }
+        },
+        {
+          "client_id": "480421139178-h4oltlbao8ij5dbntrqm30495jcsf4eh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGlR3uFWrCnvIysF2AGQhn-UXLMoOLtmg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "480421139178-h4oltlbao8ij5dbntrqm30495jcsf4eh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "480421139178-i68nr3c0rd9qqgln6anp1hu6m174la5b.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "br.com.seunome.patrimonioIa"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480421139178:android:26134c38f244e037443d93",
+        "android_client_info": {
+          "package_name": "br.com.seu_nome.patrimonio_ia"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "480421139178-h4oltlbao8ij5dbntrqm30495jcsf4eh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGlR3uFWrCnvIysF2AGQhn-UXLMoOLtmg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "480421139178-h4oltlbao8ij5dbntrqm30495jcsf4eh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "480421139178-i68nr3c0rd9qqgln6anp1hu6m174la5b.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "br.com.seunome.patrimonioIa"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
