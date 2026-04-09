@@ -8,7 +8,7 @@ import 'about_screen.dart';
 import 'login_screen.dart';
 import 'map_screen.dart';
 import 'duvidas_screen.dart';
-import 'settings_screen.dart'; // ✅ IMPORTA CONFIGURAÇÕES
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -55,6 +55,9 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
         title: const Text("Sair"),
         content: const Text("Deseja encerrar sua sessão?"),
         actions: [
@@ -77,14 +80,27 @@ class _HomeScreenState extends State<HomeScreen> {
   void _abrirClassificacao() {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
-      builder: (_) => Padding(
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => Container(
         padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Container(
+              width: 50,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(height: 20),
+
             const Text(
               "Escolha o tipo de classificação",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -98,24 +114,32 @@ class _HomeScreenState extends State<HomeScreen> {
               categoria: "Elementos Arquitetônicos",
             ),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 10),
+
+            _opcaoClassificacao(
+              icon: Icons.house,
+              titulo: "Casa Corrente",
+              subtitulo: "Classificação arquitetônica",
+              categoria: "Casa Corrente",
+            ),
+
+            const SizedBox(height: 10),
+
+            // 🔥 NOVA CATEGORIA
+            _opcaoClassificacao(
+              icon: Icons.window,
+              titulo: "Janelas Históricas",
+              subtitulo: "Classificação de tipologias de janelas",
+              categoria: "Janelas Históricas",
+            ),
+
+            const SizedBox(height: 10),
 
             _opcaoClassificacao(
               icon: Icons.warning_amber_rounded,
               titulo: "Rachaduras",
-              subtitulo: "Análise estrutural (em breve)",
+              subtitulo: "Em breve",
               categoria: "Rachaduras",
-              desabilitado: true,
-            ),
-
-            const SizedBox(height: 15),
-
-            // ✅ NOVA CLASSIFICAÇÃO
-            _opcaoClassificacao(
-              icon: Icons.house,
-              titulo: "Casa Corrente",
-              subtitulo: "Classificação arquitetônica (em breve)",
-              categoria: "Casa Corrente",
               desabilitado: true,
             ),
           ],
@@ -131,22 +155,35 @@ class _HomeScreenState extends State<HomeScreen> {
     required String categoria,
     bool desabilitado = false,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.orange[800], size: 32),
-      title: Text(titulo, style: const TextStyle(fontWeight: FontWeight.bold)),
-      subtitle: Text(subtitulo),
-      enabled: !desabilitado,
-      onTap: desabilitado
-          ? null
-          : () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => CameraScreen(categoria: categoria),
-                ),
-              );
-            },
+    return Material(
+      borderRadius: BorderRadius.circular(15),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(15),
+        onTap: desabilitado
+            ? null
+            : () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CameraScreen(categoria: categoria),
+                  ),
+                );
+              },
+        child: ListTile(
+          leading: Icon(
+            icon,
+            color: const Color.fromARGB(255, 129, 24, 3),
+            size: 32,
+          ),
+          title: Text(
+            titulo,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(subtitulo),
+          enabled: !desabilitado,
+        ),
+      ),
     );
   }
 
@@ -154,22 +191,25 @@ class _HomeScreenState extends State<HomeScreen> {
     return SizedBox(
       width: 260,
       height: 55,
-      child: ElevatedButton(
-        onPressed: onTap,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color.fromARGB(255, 234, 80, 8),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          elevation: 6,
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            letterSpacing: 1.2,
+      child: Material(
+        color: const Color.fromARGB(255, 177, 39, 11),
+        borderRadius: BorderRadius.circular(30),
+        elevation: 6,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(30),
+          onTap: onTap,
+          splashColor: Colors.white24,
+          highlightColor: Colors.white10,
+          child: Center(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 1.2,
+              ),
+            ),
           ),
         ),
       ),
@@ -211,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 234, 80, 8),
+                      color: Color.fromARGB(255, 133, 33, 13),
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -239,31 +279,43 @@ class _HomeScreenState extends State<HomeScreen> {
           Positioned(
             top: 16,
             left: 16,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const DuvidasScreen()),
-                );
-              },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.help_outline,
-                    color: Colors.redAccent.shade700,
-                    size: 22,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const DuvidasScreen()),
+                  );
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    "Dúvidas sobre cada classificação",
-                    style: TextStyle(
-                      color: Colors.redAccent.shade700,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.help_outline,
+                        color: Colors.redAccent.shade700,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        "Dúvidas",
+                        style: TextStyle(
+                          color: Colors.redAccent.shade700,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),

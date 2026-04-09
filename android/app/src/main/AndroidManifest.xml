@@ -1,11 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- 🔐 Permissões necessárias -->
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- 🌐 INTERNET (OBRIGATÓRIO PARA LINKS E API) -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
-    <!-- 📷 Feature de câmera (não obrigatória para rodar o app) -->
+    <!-- 📷 CÂMERA -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+
+    <!-- 🎤 ÁUDIO -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
+    <!-- 📍 LOCALIZAÇÃO -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
+    <!-- 📷 Feature de câmera -->
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
@@ -13,7 +21,8 @@
     <application
         android:label="patrimonio_ia"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true"> <!-- 🔥 IMPORTANTE -->
 
         <activity
             android:name=".MainActivity"
@@ -25,7 +34,7 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
 
-            <!-- Tema inicial do Flutter -->
+            <!-- Tema inicial -->
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme"/>
@@ -44,12 +53,27 @@
 
     </application>
 
-    <!-- Permissões de visibilidade de intents -->
+    <!-- 🔥 ESSENCIAL PARA ABRIR LINKS (ANDROID 11+) -->
     <queries>
+
+        <!-- navegador -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+
+        <!-- fallback -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="http"/>
+        </intent>
+
+        <!-- texto -->
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+
     </queries>
 
 </manifest>

@@ -38,9 +38,8 @@ class DetectionModel {
       categoria: map['categoria'] ?? '',
       data: DateTime.parse(map['data']),
       userId: map['userId'],
-      latitude: map['latitude'] != null
-          ? (map['latitude'] as num).toDouble()
-          : null,
+      latitude:
+          map['latitude'] != null ? (map['latitude'] as num).toDouble() : null,
       longitude: map['longitude'] != null
           ? (map['longitude'] as num).toDouble()
           : null,
@@ -67,11 +66,12 @@ class DetectionModel {
     return DetectionModel(
       elemento: map['elemento'] ?? '',
       categoria: map['categoria'] ?? '',
-      data: (map['data'] as Timestamp).toDate(),
+      data: map['data'] != null
+          ? (map['data'] as Timestamp).toDate()
+          : DateTime.now(), // 🔥 fallback importante
       userId: map['userId'],
-      latitude: map['latitude'] != null
-          ? (map['latitude'] as num).toDouble()
-          : null,
+      latitude:
+          map['latitude'] != null ? (map['latitude'] as num).toDouble() : null,
       longitude: map['longitude'] != null
           ? (map['longitude'] as num).toDouble()
           : null,

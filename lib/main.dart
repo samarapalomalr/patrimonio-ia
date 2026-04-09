@@ -8,19 +8,24 @@ import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicializa Firebase UMA VEZ
-  if (kIsWeb ||
-      defaultTargetPlatform == TargetPlatform.android ||
-      defaultTargetPlatform == TargetPlatform.iOS) {
+  // 🔥 Inicializa Firebase apenas em plataformas suportadas
+  if (_firebaseSupportedPlatform) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
 
   runApp(const MyApp());
+}
+
+/// 🔎 Verifica se a plataforma suporta Firebase
+bool get _firebaseSupportedPlatform {
+  return kIsWeb ||
+      defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS;
 }
 
 class MyApp extends StatelessWidget {
@@ -34,7 +39,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color.fromARGB(255, 234, 80, 8),
+          seedColor: Color.fromARGB(255, 129, 24, 3),
         ),
       ),
       home: const AppBootstrap(),
@@ -48,14 +53,12 @@ class AppBootstrap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Desktop sem Firebase
-    if (!kIsWeb &&
-        !(defaultTargetPlatform == TargetPlatform.android ||
-            defaultTargetPlatform == TargetPlatform.iOS)) {
+    // 🖥 Desktop (Linux, Windows, macOS) → sem Firebase
+    if (!_firebaseSupportedPlatform) {
       return const HomeScreen();
     }
 
-    // Web / Mobile com Firebase
+    // 🌐 Web / 📱 Mobile com Firebase
     return const AuthGate();
   }
 }

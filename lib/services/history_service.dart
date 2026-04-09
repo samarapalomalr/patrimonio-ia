@@ -10,26 +10,60 @@ class HistoryService {
 
   bool get isLogged => _auth.currentUser != null;
 
-  /// 💾 Salvar inspeção (LOCAL + Firebase)
+  /// 💾 Salvar inspeção
   Future<void> salvarDeteccao(DetectionModel detection) async {
-    /// 🔹 SQLite
-    await DbHelper.inserirDeteccao(detection.toMap());
+    try {
+      print("📥 Salvando LOCAL:");
+      print("LAT: ${detection.latitude}");
+      print("LNG: ${detection.longitude}");
 
-    /// 🔹 Firebase
-    if (isLogged) {
-      final user = _auth.currentUser!;
-      await _db
-          .collection('users')
-          .doc(user.uid)
-          .collection('historico')
-          .add(detection.toFirestore());
+      /// 🔹 LOCAL
+      await DbHelper.inserirDeteccao(detection.toMap());
+
+      /// 🔹 FIREBASE
+      if (isLogged) {
+        final user = _auth.currentUser!;
+
+        print("☁️ Salvando no Firebase");
+
+        await _db
+            .collection('users')
+            .doc(user.uid)
+            .collection('historico')
+            .add({
+          ...detection.toFirestore(),
+
+          // 🔥 GARANTE que vai explicitamente
+          'latitude': detection.latitude,
+          'longitude': detection.longitude,
+        });
+      }
+    } catch (e) {
+      print("❌ Erro ao salvar detecção: $e");
     }
   }
 
   /// 📊 Histórico
   Stream<List<DetectionModel>> listarDeteccoes() async* {
+    List<DetectionModel> listaFinal = [];
+
+    final listaLocal = await DbHelper.listarDeteccoes();
+
+    listaFinal.addAll(
+      listaLocal.map((e) {
+        final d = DetectionModel.fromMap(e);
+
+        print("📍 LOCAL DB:");
+        print("LAT: ${d.latitude}");
+        print("LNG: ${d.longitude}");
+
+        return d;
+      }),
+    );
+
     if (isLogged) {
       final user = _auth.currentUser!;
+
       yield* _db
           .collection('users')
           .doc(user.uid)
@@ -37,13 +71,25 @@ class HistoryService {
           .orderBy('data', descending: true)
           .snapshots()
           .map((snapshot) {
-            return snapshot.docs
-                .map((doc) => DetectionModel.fromFirestore(doc.data()))
-                .toList();
-          });
+        final listaFirebase = snapshot.docs.map((doc) {
+          final d = DetectionModel.fromFirestore(doc.data());
+
+          print("☁️ FIREBASE:");
+          print("LAT: ${d.latitude}");
+          print("LNG: ${d.longitude}");
+
+          return d;
+        }).toList();
+
+        final combinada = [...listaFirebase, ...listaFinal];
+
+        combinada.sort((a, b) => b.data.compareTo(a.data));
+
+        return combinada;
+      });
     } else {
-      final listaLocal = await DbHelper.listarDeteccoes();
-      yield listaLocal.map((e) => DetectionModel.fromMap(e)).toList();
+      listaFinal.sort((a, b) => b.data.compareTo(a.data));
+      yield listaFinal;
     }
   }
 }

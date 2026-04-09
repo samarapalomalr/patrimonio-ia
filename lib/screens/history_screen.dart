@@ -15,7 +15,7 @@ class HistoryScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inspeções Patrimoniais'),
-        backgroundColor: Colors.orange[800],
+        backgroundColor: Color.fromARGB(255, 129, 24, 3),
         centerTitle: true,
       ),
       body: StreamBuilder<List<DetectionModel>>(
@@ -23,7 +23,8 @@ class HistoryScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Colors.orange),
+              child: CircularProgressIndicator(
+                  color: Color.fromARGB(255, 129, 24, 3)),
             );
           }
 
@@ -73,7 +74,7 @@ class HistoryScreen extends StatelessWidget {
                             ),
                             child: const Icon(
                               Icons.account_balance,
-                              color: Colors.orange,
+                              color: Color.fromARGB(255, 129, 24, 3),
                               size: 28,
                             ),
                           ),
@@ -196,7 +197,7 @@ class HistoryScreen extends StatelessWidget {
                         const Text(
                           '📍 Localização da inspeção',
                           style: TextStyle(
-                            color: Colors.orange,
+                            color: Color.fromARGB(255, 129, 24, 3),
                             fontWeight: FontWeight.bold,
                           ),
                         ),

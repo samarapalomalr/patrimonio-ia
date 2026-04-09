@@ -14,7 +14,7 @@ class MapScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mapa de Inspeções'),
-        backgroundColor: Colors.orange[800],
+        backgroundColor: const Color.fromARGB(255, 129, 24, 3),
         foregroundColor: Colors.white,
       ),
       body: StreamBuilder<List<DetectionModel>>(
@@ -22,7 +22,9 @@ class MapScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Colors.orange),
+              child: CircularProgressIndicator(
+                color: Color.fromARGB(255, 129, 24, 3),
+              ),
             );
           }
 
@@ -32,44 +34,54 @@ class MapScreen extends StatelessWidget {
             );
           }
 
-          final deteccoes = snapshot.data!;
-
-          final markers = deteccoes
-              .where((d) => d.latitude != null && d.longitude != null)
-              .map(
-                (d) => Marker(
-                  point: LatLng(d.latitude!, d.longitude!),
-                  width: 40,
-                  height: 40,
-                  child: GestureDetector(
-                    onTap: () {
-                      _mostrarDetalhes(context, d);
-                    },
-                    child: const Icon(
-                      Icons.location_on,
-                      color: Colors.red,
-                      size: 36,
-                    ),
-                  ),
-                ),
-              )
+          final deteccoes = snapshot.data!
+              .where((d) =>
+                  d.latitude != null &&
+                  d.longitude != null &&
+                  d.latitude != 0 &&
+                  d.longitude != 0)
               .toList();
 
-          return FlutterMap(
-            options: MapOptions(
-              initialCenter: LatLng(
-                deteccoes.first.latitude!,
-                deteccoes.first.longitude!,
+          if (deteccoes.isEmpty) {
+            return const Center(
+              child: Text('Nenhuma localização válida encontrada'),
+            );
+          }
+
+          final markers = deteccoes.map((d) {
+            return Marker(
+              point: LatLng(d.latitude!, d.longitude!),
+              width: 40,
+              height: 40,
+              child: GestureDetector(
+                onTap: () => _mostrarDetalhes(context, d),
+                child: const Icon(
+                  Icons.location_on,
+                  color: Colors.red,
+                  size: 36,
+                ),
               ),
-              initialZoom: 15,
+            );
+          }).toList();
+
+          return SizedBox.expand(
+            // 🔥 garante renderização
+            child: FlutterMap(
+              options: MapOptions(
+                initialCenter: LatLng(
+                  deteccoes.first.latitude!,
+                  deteccoes.first.longitude!,
+                ),
+                initialZoom: 15,
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.example.patrimonio_ia',
+                ),
+                MarkerLayer(markers: markers),
+              ],
             ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.example.patrimonio_ia',
-              ),
-              MarkerLayer(markers: markers),
-            ],
           );
         },
       ),
@@ -90,16 +102,19 @@ class MapScreen extends StatelessWidget {
           children: [
             Text(
               d.elemento,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 10),
             Text('Categoria: ${d.categoria}'),
             const SizedBox(height: 6),
             Text('Data: ${d.data.day}/${d.data.month}/${d.data.year}'),
             const SizedBox(height: 10),
-            Row(
-              children: const [
-                Icon(Icons.location_on, color: Colors.orange),
+            const Row(
+              children: [
+                Icon(Icons.location_on, color: Color.fromARGB(255, 129, 24, 3)),
                 SizedBox(width: 6),
                 Text('Localização registrada'),
               ],
