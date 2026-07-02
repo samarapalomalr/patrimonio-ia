@@ -5,11 +5,14 @@ class ModelRegistry {
 
     'Casa Corrente': 'assets/models/casas_coloniais.tflite',
 
-    // ✅ NOVO MODELO (JANELAS)
+    // ✅ JANELAS
     'Janelas Históricas': 'assets/models/janelas_heritage.tflite',
+
+    // ✅ NOVO: PORTAS (Edge Impulse)
+    'Portas': 'assets/models/portas.tflite',
   };
 
-  /// ⚠️ ORDEM IDÊNTICA AO TREINAMENTO (Edge Impulse)
+  /// ⚠️ ORDEM IDÊNTICA AO TREINAMENTO
   static const Map<String, List<String>> labels = {
     'Elementos Arquitetônicos': [
       'Church',
@@ -18,28 +21,32 @@ class ModelRegistry {
       'Tower',
       'Window',
     ],
-
     'Casa Corrente': [
       "Casa de Meia Morada",
       "Casas de Porta e Janela",
       "Sobrado de Frente Estreita",
     ],
-
-    // ✅ EXTRAÍDO DIRETAMENTE DO SEU MODELO C++
     'Janelas Históricas': [
       "BalconyDoor-PortaSacada",
       "PanelledWindow-Almofada",
       "PlainWindow-Calha",
       "SashWindow-Guilhotina",
     ],
+    'Portas': [
+      "1 - Panelled Door (Almofada)",
+      "2 - Plain Door (Calha)",
+    ],
   };
 
-  /// 📏 INPUT SIZE (IMPORTANTE PARA RESIZE)
+  /// 📏 INPUT SIZE (CRÍTICO)
   static const Map<String, int> inputSizes = {
     'Elementos Arquitetônicos': 96,
     'Casa Corrente': 96,
-
-    // ✅ MESMO DO EDGE IMPULSE (input_width = 96)
     'Janelas Históricas': 96,
+
+    // ✅ EDGE IMPULSE → 192x192
+    'Portas': 192,
   };
 }
+
+//

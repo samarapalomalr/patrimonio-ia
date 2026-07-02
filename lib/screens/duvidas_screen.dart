@@ -40,10 +40,10 @@ class _DuvidasScreenState extends State<DuvidasScreen>
           "assets/images/torre.png",
         ];
 
-      case "Rachaduras":
+      case "Portas": // ✅ NOVO
         return [
-          "assets/images/rachadura1.png",
-          "assets/images/rachadura2.png",
+          "assets/images/almo.png",
+          "assets/images/ca.png",
         ];
 
       case "Casa Corrente":
@@ -53,7 +53,6 @@ class _DuvidasScreenState extends State<DuvidasScreen>
           "assets/images/porta_janela.png",
         ];
 
-      // 🔥 NOVA CATEGORIA
       case "Janelas Históricas":
         return [
           "assets/images/sacada.png",
@@ -72,13 +71,15 @@ class _DuvidasScreenState extends State<DuvidasScreen>
       case "Elementos Arquitetônicos":
         return ["Igreja", "Janela", "Frontão", "Porta", "Torre"];
 
-      case "Rachaduras":
-        return ["Rachadura 1", "Rachadura 2"];
+      case "Portas": // ✅ NOVO
+        return [
+          "Panelled Door (Almofada)",
+          "Plain Door (Calha)",
+        ];
 
       case "Casa Corrente":
         return ["Meia Morada", "Sobrado", "Porta e Janela"];
 
-      // 🔥 LABELS DO MODELO (ALINHADO COM EDGE IMPULSE)
       case "Janelas Históricas":
         return [
           "Porta Sacada",
@@ -101,12 +102,15 @@ class _DuvidasScreenState extends State<DuvidasScreen>
             "Componentes que formam e caracterizam a estrutura e o estilo de um edifício.",
         exemplo: "assets/images/igreja.png",
       ),
+
+      // ✅ NOVO: PORTAS
       ClassificacaoModel(
-        nome: "Rachaduras",
+        nome: "Portas",
         descricao:
-            "Fissuras ou fraturas na superfície de materiais de construção.",
-        exemplo: "assets/images/rachadura1.png",
+            "Classificação de portas históricas, como portas almofadadas e portas de calha.",
+        exemplo: "assets/images/almofada.png",
       ),
+
       ClassificacaoModel(
         nome: "Casa Corrente",
         descricao:
@@ -114,7 +118,6 @@ class _DuvidasScreenState extends State<DuvidasScreen>
         exemplo: "assets/images/sobrado.png",
       ),
 
-      // 🔥 NOVA CATEGORIA AQUI
       ClassificacaoModel(
         nome: "Janelas Históricas",
         descricao:

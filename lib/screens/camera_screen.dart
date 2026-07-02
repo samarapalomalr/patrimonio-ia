@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform;
@@ -7,6 +8,10 @@ import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+// ✅ IMPORTS MANTIDOS
+import 'package:screenshot/screenshot.dart';
+import 'package:gal/gal.dart';
 
 import '../models/detection_model.dart';
 import '../services/history_service.dart';
@@ -25,6 +30,8 @@ class _CameraScreenState extends State<CameraScreen> {
   CameraController? _cameraController;
   Interpreter? _interpreter;
 
+  final ScreenshotController _screenshotController = ScreenshotController();
+
   HistoryService? _historyService;
   User? user;
 
@@ -41,6 +48,12 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Map<String, double> _resultados = {};
 
+  // 🔍 VARIÁVEIS DE CONTROLE DE ZOOM
+  double _currentZoomLevel = 1.0;
+  double _minAvailableZoom = 1.0;
+  double _maxAvailableZoom = 1.0;
+  double _baseZoomLevel = 1.0;
+
   bool get _firebaseSupportedPlatform {
     return kIsWeb ||
         defaultTargetPlatform == TargetPlatform.android ||
@@ -50,7 +63,6 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   void initState() {
     super.initState();
-
     labels = ModelRegistry.labels[widget.categoria] ?? [];
     inputSize = ModelRegistry.inputSizes[widget.categoria] ?? 96;
 
@@ -58,7 +70,6 @@ class _CameraScreenState extends State<CameraScreen> {
       user = FirebaseAuth.instance.currentUser;
       _historyService = HistoryService();
     }
-
     _inicializarTudo();
   }
 
@@ -68,14 +79,31 @@ class _CameraScreenState extends State<CameraScreen> {
     await _obterLocalizacao();
   }
 
+  Future<void> _tirarPrint() async {
+    try {
+      final Uint8List? imageBytes = await _screenshotController.capture();
+      if (imageBytes != null) {
+        await Gal.putImageBytes(imageBytes);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("📸 Resultado salvo na galeria!"),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Erro ao tirar print: $e");
+    }
+  }
+
   Future<void> _initCamera() async {
     try {
       final cameras = await availableCameras();
-
-      if (cameras.isEmpty) {
-        debugPrint("Nenhuma câmera encontrada");
-        return;
-      }
+      if (cameras.isEmpty) return;
 
       _cameraController = CameraController(
         cameras.first,
@@ -85,8 +113,11 @@ class _CameraScreenState extends State<CameraScreen> {
 
       await _cameraController!.initialize();
 
-      if (!mounted) return;
+      // 🔍 DETECTA OS LIMITES REAIS DE ZOOM DO HARDWARE
+      _minAvailableZoom = await _cameraController!.getMinZoomLevel();
+      _maxAvailableZoom = await _cameraController!.getMaxZoomLevel();
 
+      if (!mounted) return;
       setState(() => _cameraCarregada = true);
     } catch (e) {
       debugPrint("Erro ao iniciar câmera: $e");
@@ -96,11 +127,7 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _initModel() async {
     try {
       final modelPath = ModelRegistry.models[widget.categoria];
-
-      if (modelPath == null) {
-        debugPrint("Modelo não encontrado");
-        return;
-      }
+      if (modelPath == null) return;
 
       _interpreter = await Interpreter.fromAsset(
         modelPath,
@@ -111,7 +138,6 @@ class _CameraScreenState extends State<CameraScreen> {
       _isModelFloat = inputTensor.type.toString().contains('float');
 
       if (!mounted) return;
-
       setState(() => _modeloCarregado = true);
     } catch (e) {
       debugPrint("Erro ao carregar modelo: $e");
@@ -121,28 +147,15 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _obterLocalizacao() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        debugPrint("GPS desativado");
-        return;
-      }
+      if (!serviceEnabled) return;
 
       LocationPermission permission = await Geolocator.checkPermission();
-
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
-
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        debugPrint("Permissão de localização negada");
-        return;
-      }
+      if (permission == LocationPermission.deniedForever) return;
 
       _posicaoAtual = await Geolocator.getCurrentPosition();
-
-      debugPrint("📍 Localização obtida:");
-      debugPrint("LAT: ${_posicaoAtual?.latitude}");
-      debugPrint("LNG: ${_posicaoAtual?.longitude}");
     } catch (e) {
       debugPrint("Erro localização: $e");
     }
@@ -167,37 +180,22 @@ class _CameraScreenState extends State<CameraScreen> {
 
       image = img.bakeOrientation(image);
 
-      /// 🔥 GARANTE LOCALIZAÇÃO ANTES DE SALVAR
+      if (_posicaoAtual == null) await _obterLocalizacao();
       if (_posicaoAtual == null) {
-        await _obterLocalizacao();
-      }
-
-      /// 🔥 BLOQUEIA SE NÃO TIVER LOCALIZAÇÃO
-      if (_posicaoAtual == null) {
-        debugPrint("❌ Sem localização, não salvando");
         setState(() => _processando = false);
         return;
       }
 
-      final resized = img.copyResizeCropSquare(
-        image,
-        size: inputSize,
-      );
+      final resized = img.copyResizeCropSquare(image, size: inputSize);
 
       dynamic input;
-
       if (_isModelFloat) {
         input = List.generate(
-          1,
-          (_) => List.generate(
-            inputSize,
+            1,
             (_) => List.generate(
-              inputSize,
-              (_) => List<double>.filled(3, 0.0),
-            ),
-          ),
-        );
-
+                inputSize,
+                (_) => List.generate(
+                    inputSize, (_) => List<double>.filled(3, 0.0))));
         for (int y = 0; y < inputSize; y++) {
           for (int x = 0; x < inputSize; x++) {
             final pixel = resized.getPixel(x, y);
@@ -209,22 +207,15 @@ class _CameraScreenState extends State<CameraScreen> {
       } else {
         const scale = 0.00390625;
         const zeroPoint = -128;
-
         input = List.generate(
-          1,
-          (_) => List.generate(
-            inputSize,
+            1,
             (_) => List.generate(
-              inputSize,
-              (_) => List<int>.filled(3, 0),
-            ),
-          ),
-        );
-
+                inputSize,
+                (_) =>
+                    List.generate(inputSize, (_) => List<int>.filled(3, 0))));
         for (int y = 0; y < inputSize; y++) {
           for (int x = 0; x < inputSize; x++) {
             final pixel = resized.getPixel(x, y);
-
             input[0][y][x][0] = ((pixel.r / 255.0) / scale + zeroPoint).round();
             input[0][y][x][1] = ((pixel.g / 255.0) / scale + zeroPoint).round();
             input[0][y][x][2] = ((pixel.b / 255.0) / scale + zeroPoint).round();
@@ -239,7 +230,6 @@ class _CameraScreenState extends State<CameraScreen> {
       _interpreter!.run(input, output);
 
       List<double> probs;
-
       if (_isModelFloat) {
         probs = List<double>.from(output[0]);
       } else {
@@ -251,7 +241,6 @@ class _CameraScreenState extends State<CameraScreen> {
       }
 
       Map<String, double> resultadosTemp = {};
-
       for (int i = 0; i < labels.length; i++) {
         resultadosTemp[labels[i]] = probs[i] * 100;
       }
@@ -260,7 +249,6 @@ class _CameraScreenState extends State<CameraScreen> {
         ..sort((a, b) => b.value.compareTo(a.value));
 
       if (!mounted) return;
-
       setState(() {
         _resultados = Map.fromEntries(sorted);
       });
@@ -268,6 +256,7 @@ class _CameraScreenState extends State<CameraScreen> {
       final maxScore = probs.reduce((a, b) => a > b ? a : b);
       final index = probs.indexOf(maxScore);
 
+      // 🔍 NOME DA VARIÁVEL TOTALMENTE CORRIGIDO AQUI:
       final detection = DetectionModel(
         elemento: labels[index],
         categoria: widget.categoria,
@@ -277,8 +266,6 @@ class _CameraScreenState extends State<CameraScreen> {
         latitude: _posicaoAtual!.latitude,
         longitude: _posicaoAtual!.longitude,
       );
-
-      debugPrint("💾 Salvando detecção com localização");
 
       if (_firebaseSupportedPlatform &&
           _historyService != null &&
@@ -292,12 +279,34 @@ class _CameraScreenState extends State<CameraScreen> {
     if (mounted) setState(() => _processando = false);
   }
 
+  // 🔍 FUNÇÕES AUXILIARES PARA CÁLCULO DINÂMICO DO PINCH-TO-ZOOM
+  void _handleScaleStart(ScaleStartDetails details) {
+    _baseZoomLevel = _currentZoomLevel;
+  }
+
+  void _handleScaleUpdate(ScaleUpdateDetails details) {
+    if (_cameraController == null) return;
+
+    double newZoomLevel = _baseZoomLevel * details.scale;
+
+    // Trava de segurança para não estourar o limite da câmera
+    if (newZoomLevel < _minAvailableZoom) {
+      newZoomLevel = _minAvailableZoom;
+    } else if (newZoomLevel > _maxAvailableZoom) {
+      newZoomLevel = _maxAvailableZoom;
+    }
+
+    setState(() {
+      _currentZoomLevel = newZoomLevel;
+    });
+
+    _cameraController!.setZoomLevel(newZoomLevel);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_cameraCarregada || _cameraController == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -305,56 +314,72 @@ class _CameraScreenState extends State<CameraScreen> {
         title: Text(widget.categoria),
         backgroundColor: const Color.fromARGB(255, 129, 24, 3),
         foregroundColor: Colors.white,
+        actions: [
+          if (_resultados.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.add_photo_alternate_rounded),
+              onPressed: _tirarPrint,
+              tooltip: "Salvar registro com análise",
+            ),
+        ],
       ),
-      body: Stack(
-        children: [
-          CameraPreview(_cameraController!),
-          Positioned(
-            bottom: 20,
-            left: 20,
-            right: 20,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.75),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: _resultados.entries.map((entry) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 3),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(entry.key,
-                            style: const TextStyle(color: Colors.white)),
-                        Text(
-                          "${entry.value.toStringAsFixed(2)}%",
-                          style: const TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
+      body: Screenshot(
+        controller: _screenshotController,
+        child: Stack(
+          children: [
+            // 🔍 DETECTOR DE GESTOS QUE ENVOLVE E CAPTURA A PINÇA NO PREVIEW
+            GestureDetector(
+              onScaleStart: _handleScaleStart,
+              onScaleUpdate: _handleScaleUpdate,
+              child: SizedBox(
+                width: double.infinity,
+                height: double.infinity,
+                child: CameraPreview(_cameraController!),
               ),
             ),
-          ),
-        ],
+            if (_resultados.isNotEmpty)
+              Positioned(
+                bottom: 20,
+                left: 20,
+                right: 20,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.75),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: _resultados.entries.map((entry) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(entry.key,
+                                style: const TextStyle(color: Colors.white)),
+                            Text(
+                              "${entry.value.toStringAsFixed(2)}%",
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: _modeloCarregado
             ? const Color.fromARGB(255, 129, 24, 3)
             : Colors.grey,
-        icon: const Icon(Icons.camera, color: Colors.white),
-        label: Text(
-          !_modeloCarregado
-              ? 'CARREGANDO...'
-              : _processando
-                  ? 'PROCESSANDO...'
-                  : 'CLASSIFICAR',
-        ),
+        icon: const Icon(Icons.center_focus_strong, color: Colors.white),
+        label: Text(_processando ? 'PROCESSANDO...' : 'CLASSIFICAR'),
         onPressed:
             (!_modeloCarregado || _processando) ? null : _classificarImagem,
       ),

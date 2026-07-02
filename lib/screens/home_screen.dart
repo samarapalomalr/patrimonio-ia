@@ -125,12 +125,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 10),
 
-            // 🔥 NOVA CATEGORIA
             _opcaoClassificacao(
               icon: Icons.window,
               titulo: "Janelas Históricas",
               subtitulo: "Classificação de tipologias de janelas",
               categoria: "Janelas Históricas",
+            ),
+
+            const SizedBox(height: 10),
+
+            // ✅ NOVA CATEGORIA: PORTAS
+            _opcaoClassificacao(
+              icon: Icons.door_front_door,
+              titulo: "Portas",
+              subtitulo: "Classificação de portas históricas",
+              categoria: "Portas",
             ),
 
             const SizedBox(height: 10),
@@ -217,6 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE0E0E0),
@@ -246,6 +256,33 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(25),
               child: Column(
                 children: [
+                  // LOGO PRINCIPAL
+                  Image.asset(
+                    'assets/images/iapatrimonio.png',
+                    height: 180,
+                    fit: BoxFit.contain,
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  // LOGOS INSTITUCIONAIS
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/images/ufop.png',
+                        height: 70,
+                      ),
+                      const SizedBox(width: 25),
+                      Image.asset(
+                        'assets/images/mlbots.png',
+                        height: 70,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 30),
+
                   Text(
                     "Olá, $_nomeExibicao",
                     style: const TextStyle(
@@ -254,22 +291,35 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Color.fromARGB(255, 133, 33, 13),
                     ),
                   ),
+
                   const SizedBox(height: 40),
-                  _buildMainButton("Classificar", _abrirClassificacao),
+
+                  _buildMainButton(
+                    "Classificar",
+                    _abrirClassificacao,
+                  ),
+
                   const SizedBox(height: 15),
+
                   _buildMainButton(
                     "Histórico",
                     () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const HistoryScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const HistoryScreen(),
+                      ),
                     ),
                   ),
+
                   const SizedBox(height: 15),
+
                   _buildMainButton(
                     "Artigos Relacionados",
                     () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const AboutScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const AboutScreen(),
+                      ),
                     ),
                   ),
                 ],
@@ -286,12 +336,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const DuvidasScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const DuvidasScreen(),
+                    ),
                   );
                 },
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.redAccent.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -327,7 +381,9 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const SettingsScreen(),
+                  ),
                 );
               },
               child: const Icon(Icons.settings),
