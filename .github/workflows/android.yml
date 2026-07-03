@@ -1,4 +1,4 @@
-name: Build Flutter APK
+name: Build Android APK
 
 on:
   workflow_dispatch:
@@ -8,32 +8,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout do código
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Instalar Java 21
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
 
-      - name: Instalar Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.38.7'
-          channel: stable
+          flutter-version: 3.38.7
           cache: true
+
+      - name: Criar local.properties
+        run: |
+          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
 
       - name: Instalar dependências
         run: flutter pub get
 
-      - name: Verificar Flutter
+      - name: Aceitar licenças Android
+        run: yes | flutter doctor --android-licenses || true
+
+      - name: Flutter Doctor
         run: flutter doctor -v
 
-      - name: Compilar APK
+      - name: Build APK
         run: flutter build apk --release
 
-      - name: Salvar APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release
